@@ -164,6 +164,8 @@ func UpdateCurrentIssues(ctx context.Context, jiraClient *jira.Client, dataStore
 		if lib.ContainsString(issues[0].Fields.Status.Name, statesToCheck) {
 			issueToUpdate.Status = issues[0].Fields.Status.Name
 			issueToUpdate.Priority = issues[0].Fields.Priority.Name
+			issueToUpdate.URL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s", issueToUpdate.ID)
+			issueToUpdate.ListURL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s?filter=18341", issueToUpdate.ID)
 
 			if issues[0].Fields.Assignee != nil {
 				issueToUpdate.Assignee = issues[0].Fields.Assignee.DisplayName
