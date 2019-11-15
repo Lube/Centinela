@@ -24,7 +24,7 @@ type Config struct {
 
 func GetConfig() Config {
 	return Config{
-		ActiveChatRooms:          []int64{740387286},
+		ActiveChatRooms:          []int64{-377925631, -302945846},
 		TelegramAPIToken:         os.Getenv("TELEGRAM_API_TOKEN"),
 		JiraAPIToken:             os.Getenv("JIRA_API_TOKEN"),
 		HandleMessageTelegramURL: os.Getenv("HANDLE_MESSAGE_PUBLIC_URL"),
