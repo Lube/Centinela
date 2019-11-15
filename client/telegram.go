@@ -15,9 +15,13 @@ func NotifyIssues(bot *tgbotapi.BotAPI, issues []*domain.Issue, config lib.Confi
 	for _, issue := range issues {
 		if printWithDetail {
 			message = fmt.Sprintf("%s\nIssue: %s\nVencimiento: %s", message, issue.ID, issue.DueDate.In(loc).Format(time.RFC822))
-
+			if issue.Description != "" {
+				message = fmt.Sprintf("%s\nDescripcion: %s", message, issue.Description)
+			}
 			if issue.Assignee != "" {
-				message = fmt.Sprintf("%s\nAsignado a: %s", message, issue.Assignee)
+				message = fmt.Sprintf("%s\nAsignado a: %s\n", message, issue.Assignee)
+			} else {
+				message = message + "\n"
 			}
 		} else {
 			message = fmt.Sprintf("%s\nIssue: %s - Vencimiento: %s", message, issue.ID, issue.DueDate.In(loc).Format(time.RFC822))
@@ -47,6 +51,8 @@ func NotifyIssuesToChat(bot *tgbotapi.BotAPI, issues []*domain.Issue, message st
 			}
 			if issue.Assignee != "" {
 				message = fmt.Sprintf("%s\nAsignado a: %s\n", message, issue.Assignee)
+			} else {
+				message = message + "\n"
 			}
 		} else {
 			message = fmt.Sprintf("%s\nIssue: %s - Vencimiento: %s", message, issue.ID, issue.DueDate.In(loc).Format(time.RFC822))
