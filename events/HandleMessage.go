@@ -37,7 +37,8 @@ func HandleMessage(r *http.Request) error {
 		return err
 	}
 
-	log.Printf("%v+ \n", update)
+	log.Printf("chat: %d \n", update.Message.Chat.ID)
+	log.Printf("user: %d name: %s\n", update.Message.From.ID, update.Message.From.UserName)
 	if update.Message.IsCommand() {
 		tp := jira.BasicAuthTransport{
 			Username: "sebastian.luberriaga@mercadolibre.com",
