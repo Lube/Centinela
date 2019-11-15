@@ -52,6 +52,7 @@ func NotifyIssues(bot *tgbotapi.BotAPI, issues []*domain.Issue, chatRooms []int6
 }
 
 func Notify(bot *tgbotapi.BotAPI, chatID int64, message string) error {
+
 	msg := tgbotapi.MessageConfig{
 		BaseChat: tgbotapi.BaseChat{
 			ChatID:           chatID,
