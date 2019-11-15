@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/andygrunwald/go-jira"
+	"jira/client"
 	"jira/domain"
 	"jira/lib"
+	"jira/repository"
 	"log"
 	"net/http"
-	"time"
+	"strings"
 
 	"cloud.google.com/go/datastore"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -16,7 +19,9 @@ import (
 
 // HandleMessage is a webHook that handles messages to Centinela, or to Centinela's rooms.
 func HandleMessage(r *http.Request) error {
+
 	config := lib.GetConfig()
+	ctx := context.Background()
 
 	bot, err := tgbotapi.NewBotAPI(config.TelegramAPIToken)
 	if err != nil {
@@ -32,55 +37,130 @@ func HandleMessage(r *http.Request) error {
 		return err
 	}
 
-	if update.Message.IsCommand() && update.Message.Command() == "bugs" {
-		dataStoreClient, err := datastore.NewClient(context.Background(), "centinela-258804")
+	if update.Message.IsCommand() {
+		tp := jira.BasicAuthTransport{
+			Username: "sebastian.luberriaga@mercadolibre.com",
+			Password: config.JiraAPIToken,
+		}
+		jiraClient, err := jira.NewClient(tp.Client(), "https://mercadolibre.atlassian.net/")
 		if err != nil {
 			return err
 		}
 
-		issues, err := GetIssuesToNotify(context.Background(), dataStoreClient)
+		dataStoreClient, err := datastore.NewClient(ctx, "centinela-258804")
 		if err != nil {
 			return err
 		}
 
-		err = NotifyIssues(bot, update.Message.Chat.ID, issues)
-		if err != nil {
-			return err
+		switch update.Message.Command() {
+		case "bugs":
+			flags := strings.TrimSpace(update.Message.CommandArguments())
+
+			printWithDetail := false
+			if strings.Contains(flags, "--verbose") {
+				printWithDetail = true
+			}
+
+			issues, err := repository.GetAllIssues(ctx, dataStoreClient, domain.Bug)
+			if err != nil {
+				return err
+			}
+
+			if len(issues) > 0 {
+				err = client.NotifyIssuesToChat(
+					bot, issues,"Centinela avisa!\nBugs activos!\n",
+					printWithDetail, update.Message.Chat.ID,
+				)
+			} else {
+				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Bugs activos!")
+			}
+			if err != nil {
+				return err
+			}
+
+		case "pedidos_de_fix":
+			flags := strings.TrimSpace(update.Message.CommandArguments())
+
+			printWithDetail := false
+			if strings.Contains(flags, "--verbose") {
+				printWithDetail = true
+			}
+
+			issues, err := repository.GetAllIssues(ctx, dataStoreClient, domain.PedidoDeFix)
+			if err != nil {
+				return err
+			}
+
+			if len(issues) > 0 {
+				err = client.NotifyIssuesToChat(
+					bot, issues,"Centinela avisa!\nPedidos de Fix activos!\n",
+					printWithDetail, update.Message.Chat.ID,
+				)
+			} else {
+				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Pedidos de Fix activos!")
+			}
+			if err != nil {
+				return err
+			}
+		case "take":
+			user, ok := config.UserDirectory[lib.TelegramUserID(update.Message.From.ID)]
+			if !ok {
+				_ = client.Notify(bot, update.Message.Chat.ID, "Could not find user on directory - contact Lube!")
+			}
+
+			issueID := strings.TrimSpace(update.Message.CommandArguments())
+
+			err := repository.Take(ctx, jiraClient, dataStoreClient, user, issueID)
+			if err != nil {
+				return err
+			}
+
+			err = repository.UpdateCurrentIssues(ctx, jiraClient, dataStoreClient, []string{"Activo", "En Proceso", "En progreso", "Esperando Deploy", "Pendiente de Fix"})
+			if err != nil {
+				return err
+			}
+
+			_ = client.Notify(bot, update.Message.Chat.ID, fmt.Sprintf("Issue: %s assigned to: %s", issueID, user.DisplayName))
+
+		case "release":
+			issueID := strings.TrimSpace(update.Message.CommandArguments())
+
+			err = repository.IndexActiveBugs(ctx, jiraClient, dataStoreClient, bot, config)
+			if err != nil {
+				return err
+			}
+
+			err := repository.Release(ctx, jiraClient, dataStoreClient, issueID)
+			if err != nil {
+				return err
+			}
+
+			err = repository.UpdateCurrentIssues(ctx, jiraClient, dataStoreClient, []string{"Activo", "En Proceso", "En progreso", "Esperando Deploy", "Pendiente de Fix"})
+			if err != nil {
+				return err
+			}
+
+			_ = client.Notify(bot, update.Message.Chat.ID, fmt.Sprintf("Issue: %s is now free", issueID))
+
+		case "help":
+			_ = client.Notify(bot, update.Message.Chat.ID,
+				fmt.Sprintf(`Centinela notifica sobre nuevos bugs y pedidos de Fix
+Adicionalmente revisa los pedidos de fix y bugs próximos a vencer (A %s dias para Bugs y %s horas para Pedidos de Fix) hasta % veces por día.
+
+Comandos
+
+help - /help Información general del bot.
+			
+bugs - /bugs [--verbose] Lista los bugs activos actuales, se actualiza cada 60 minutos. --verbose Muestra issues con responsable asignado.
+
+pedidos_de_fix - /pedidos_de_fix [--verbose] Lista los pedidos de fix activos actuales, se actualiza cada 60 minutos. --verbose Muestra issues con responsable asignado.
+
+take - /take <IssueID> Asigna el issue al usuario que envía el comando. <IssueID> Ej: /take AC-2015.
+
+release - /release <IssueID> Libera la asignación del issue.<IssueID> Ej: /release AC-2015.`, config.MaxTimesToNotify))
+
+		default:
 		}
-	}
-}
-
-func GetIssuesToNotify(ctx context.Context, dataStoreClient *datastore.Client) ([]*domain.Issue, error) {
-
-	// current + deadline = duedate
-	alertDeadline := time.Hour * 24 * 7
-
-	log.Println(fmt.Sprintf("duedate less than %v", time.Now().Add(alertDeadline)))
-	q := datastore.NewQuery("Issue").
-		Filter("Duedate <", time.Now().Add(alertDeadline))
-
-	var issuesToNotify []*domain.Issue
-	_, err := dataStoreClient.GetAll(ctx, q, &issuesToNotify)
-	if err != nil {
-		return nil, err
-	}
-
-	return issuesToNotify, nil
-}
-
-func NotifyIssues(bot *tgbotapi.BotAPI, chatID int64, issues []*domain.Issue) error {
-
-	loc, _ := time.LoadLocation("America/Argentina/Buenos_Aires")
-	stringMessage := "Centinela avisa!\nBugs prontos a vencer!\n"
-
-	for _, issue := range issues {
-		stringMessage = fmt.Sprintf("%s%s - %s - %s\n", stringMessage, issue.ID, issue.DueDate.In(loc), issue.Assignee)
-	}
-
-	msg := tgbotapi.NewMessage(chatID, stringMessage)
-
-	if _, err := bot.Send(msg); err != nil {
-		return err
 	}
 
 	return nil
