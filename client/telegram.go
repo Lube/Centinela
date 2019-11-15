@@ -33,7 +33,15 @@ func NotifyIssues(bot *tgbotapi.BotAPI, issues []*domain.Issue, chatRooms []int6
 	}
 
 	for _, chatRoomID := range chatRooms {
-		msg := tgbotapi.NewMessage(chatRoomID, message)
+		msg := tgbotapi.MessageConfig{
+			BaseChat: tgbotapi.BaseChat{
+				ChatID:           chatRoomID,
+				ReplyToMessageID: 0,
+			},
+			Text:                  message,
+			ParseMode: "Markdown",
+			DisableWebPagePreview: false,
+		}
 
 		if _, err := bot.Send(msg); err != nil {
 			return err
@@ -44,7 +52,15 @@ func NotifyIssues(bot *tgbotapi.BotAPI, issues []*domain.Issue, chatRooms []int6
 }
 
 func Notify(bot *tgbotapi.BotAPI, chatID int64, message string) error {
-	msg := tgbotapi.NewMessage(chatID, message)
+	msg := tgbotapi.MessageConfig{
+		BaseChat: tgbotapi.BaseChat{
+			ChatID:           chatID,
+			ReplyToMessageID: 0,
+		},
+		Text:                  message,
+		ParseMode: "Markdown",
+		DisableWebPagePreview: false,
+	}
 
 	if _, err := bot.Send(msg); err != nil {
 		return err
