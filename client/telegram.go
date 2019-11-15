@@ -46,7 +46,7 @@ func NotifyIssuesToChat(bot *tgbotapi.BotAPI, issues []*domain.Issue, message st
 				message = fmt.Sprintf("%s\nDescripcion: %s", message, issue.Description)
 			}
 			if issue.Assignee != "" {
-				message = fmt.Sprintf("%s\nAsignado a: %s", message, issue.Assignee)
+				message = fmt.Sprintf("%s\nAsignado a: %s\n", message, issue.Assignee)
 			}
 		} else {
 			message = fmt.Sprintf("%s\nIssue: %s - Vencimiento: %s", message, issue.ID, issue.DueDate.In(loc).Format(time.RFC822))
