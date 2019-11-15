@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/andygrunwald/go-jira"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"jira/domain"
 	"jira/lib"
 	"time"
@@ -51,7 +50,8 @@ func GetIssuesToNotify(ctx context.Context, dataStoreClient *datastore.Client, c
 	}
 
 	q := datastore.NewQuery("Issue").
-		Filter("DueDate <", time.Now().Add(deadLine))
+		Filter("DueDate <", time.Now().Add(deadLine)).
+		Filter("DueDate >", time.Now())
 
 	var issuesToCheck []*domain.Issue
 	_, err := dataStoreClient.GetAll(ctx, q, &issuesToCheck)
@@ -84,19 +84,14 @@ func UpdateIssuesNotifications(ctx context.Context, dataStoreClient *datastore.C
 	return nil
 }
 
-func IndexActiveBugs(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client, bot *tgbotapi.BotAPI, config lib.Config) error {
-
-	loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
-	if err != nil {
-		return err
-	}
+func IndexActiveBugs(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client) (newBugs []*domain.Issue, err error) {
 
 	issues, _, err := jiraClient.Issue.Search(activeBugJQLQuery, &jira.SearchOptions{
 		StartAt:    0,
 		MaxResults: 50,
 	})
 	if err != nil {
-		return err
+		return newBugs, err
 	}
 
 	for _, issue := range issues {
@@ -106,7 +101,7 @@ func IndexActiveBugs(ctx context.Context, jiraClient *jira.Client, dataStoreClie
 		err := dataStoreClient.Get(ctx, k, &issueToLookup)
 		if err != nil {
 			if err != datastore.ErrNoSuchEntity {
-				return err
+				return newBugs, err
 			}
 		}
 
@@ -124,29 +119,24 @@ func IndexActiveBugs(ctx context.Context, jiraClient *jira.Client, dataStoreClie
 		stringDate, _ := issue.Fields.Unknowns["customfield_11400"].(string)
 		t, err := time.Parse(jiraTimeLayout, stringDate)
 		if err != nil {
-			return err
+			return newBugs, err
 		}
-
 		i.DueDate = t
 		i.Status = issue.Fields.Status.Name
+		i.Priority = issue.Fields.Priority.Name
+		i.URL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s", i.ID)
+		i.ListURL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s?filter=18341", i.ID)
 		i.Description = issue.Fields.Summary
 		i.Type = domain.Bug
 
 		if _, err := dataStoreClient.Put(ctx, k, i); err != nil {
-			return err
+			return newBugs, err
 		}
 
-		stringMessage := fmt.Sprintf("Nuevo bug! %s - %s - %s\n", i.ID, i.DueDate.In(loc), i.Assignee)
-
-		for _, chatRoomID := range config.ActiveChatRooms {
-			msg := tgbotapi.NewMessage(chatRoomID, stringMessage)
-			if _, err := bot.Send(msg); err != nil {
-				return err
-			}
-		}
+		newBugs = append(newBugs, i)
 	}
 
-	return nil
+	return newBugs,nil
 }
 
 func UpdateCurrentIssues(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client, statesToCheck []string) error {
@@ -173,6 +163,8 @@ func UpdateCurrentIssues(ctx context.Context, jiraClient *jira.Client, dataStore
 
 		if lib.ContainsString(issues[0].Fields.Status.Name, statesToCheck) {
 			issueToUpdate.Status = issues[0].Fields.Status.Name
+			issueToUpdate.Priority = issues[0].Fields.Priority.Name
+
 			if issues[0].Fields.Assignee != nil {
 				issueToUpdate.Assignee = issues[0].Fields.Assignee.DisplayName
 			} else {
@@ -199,19 +191,14 @@ func UpdateCurrentIssues(ctx context.Context, jiraClient *jira.Client, dataStore
 	return nil
 }
 
-func IndexActivePedidosDeFix(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client, bot *tgbotapi.BotAPI, config lib.Config) error {
-
-	loc, err := time.LoadLocation("America/Argentina/Buenos_Aires")
-	if err != nil {
-		return err
-	}
+func IndexActivePedidosDeFix(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client) (newPedidosDeFix []*domain.Issue, err error) {
 
 	issues, _, err := jiraClient.Issue.Search(activePedidoDeFixJQLQuery, &jira.SearchOptions{
 		StartAt:    0,
 		MaxResults: 50,
 	})
 	if err != nil {
-		return err
+		return newPedidosDeFix, err
 	}
 
 	for _, issue := range issues {
@@ -221,7 +208,7 @@ func IndexActivePedidosDeFix(ctx context.Context, jiraClient *jira.Client, dataS
 		err := dataStoreClient.Get(ctx, k, &issueToLookup)
 		if err != nil {
 			if err != datastore.ErrNoSuchEntity {
-				return err
+				return newPedidosDeFix, err
 			}
 		}
 
@@ -239,29 +226,25 @@ func IndexActivePedidosDeFix(ctx context.Context, jiraClient *jira.Client, dataS
 		stringDate, _ := issue.Fields.Unknowns["customfield_11400"].(string)
 		t, err := time.Parse(jiraTimeLayout, stringDate)
 		if err != nil {
-			return err
+			return newPedidosDeFix, err
 		}
 
 		i.DueDate = t
 		i.Status = issue.Fields.Status.Name
+		i.Priority = issue.Fields.Priority.Name
+		i.URL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s", i.ID)
+		i.ListURL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s?filter=18342", i.ID)
 		i.Description = issue.Fields.Summary
 		i.Type = domain.PedidoDeFix
 
 		if _, err := dataStoreClient.Put(ctx, k, i); err != nil {
-			return err
+			return newPedidosDeFix, err
 		}
 
-		stringMessage := fmt.Sprintf("Nuevo pedido de fix! %s - %s - %s\n", i.ID, i.DueDate.In(loc), i.Assignee)
-
-		for _, chatRoomID := range config.ActiveChatRooms {
-			msg := tgbotapi.NewMessage(chatRoomID, stringMessage)
-			if _, err := bot.Send(msg); err != nil {
-				return err
-			}
-		}
+		newPedidosDeFix = append(newPedidosDeFix, i)
 	}
 
-	return nil
+	return newPedidosDeFix, err
 }
 
 func ResetIssuesNotifications(ctx context.Context, dataStoreClient *datastore.Client, issues []*domain.Issue) error {

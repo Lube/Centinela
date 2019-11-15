@@ -34,7 +34,7 @@ func CheckIssuesDueDate() error {
 	}
 
 	if len(bugs) > 0 {
-		err = client.NotifyIssues(bot, bugs, config, "Centinela avisa!\nBugs prontos a vencer!\n", true)
+		err = client.NotifyIssues(bot, bugs, config.ActiveChatRooms, "Centinela avisa!\nBugs prontos a vencer!\n", true)
 		if err != nil {
 			return err
 		}
@@ -51,7 +51,7 @@ func CheckIssuesDueDate() error {
 	}
 
 	if len(pedidosDeFix) > 0 {
-		err = client.NotifyIssues(bot, pedidosDeFix, config, "Centinela avisa!\nPedidos de fix prontos a vencer!\n", true)
+		err = client.NotifyIssues(bot, pedidosDeFix, config.ActiveChatRooms, "Centinela avisa!\nPedidos de fix prontos a vencer!\n", true)
 		if err != nil {
 			return err
 		}

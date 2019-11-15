@@ -4,6 +4,7 @@ import (
 	"cloud.google.com/go/datastore"
 	"github.com/andygrunwald/go-jira"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"jira/client"
 	"jira/lib"
 	"jira/repository"
 
@@ -40,14 +41,28 @@ func PoolJiraIssues() error {
 		return err
 	}
 
-	err = repository.IndexActiveBugs(ctx, jiraClient, dataStoreClient, bot, config)
+	newBugs, err := repository.IndexActiveBugs(ctx, jiraClient, dataStoreClient)
 	if err != nil {
 		return err
 	}
 
-	err = repository.IndexActivePedidosDeFix(ctx, jiraClient, dataStoreClient, bot, config)
+	if len(newBugs) > 0 {
+		err = client.NotifyIssues(bot, newBugs, config.ActiveChatRooms, "Centinela avisa!\nNuevos Bugs!\n", true)
+		if err != nil {
+			return err
+		}
+	}
+
+	newPedidosDeFix, err := repository.IndexActivePedidosDeFix(ctx, jiraClient, dataStoreClient)
 	if err != nil {
 		return err
+	}
+
+	if len(newPedidosDeFix) > 0 {
+		err = client.NotifyIssues(bot, newBugs, config.ActiveChatRooms, "Centinela avisa!\nNuevos Pedidos de fix!\n", true)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

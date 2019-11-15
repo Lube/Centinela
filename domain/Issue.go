@@ -13,5 +13,8 @@ type Issue struct {
 	Assignee      string
 	Status        string
 	TimesNotified int
+	Priority      string
+	URL           string
+	ListURL		  string
 	DueDate       time.Time
 }

@@ -69,9 +69,10 @@ func HandleMessage(r *http.Request) error {
 			}
 
 			if len(issues) > 0 {
-				err = client.NotifyIssuesToChat(
-					bot, issues,"Centinela avisa!\nBugs activos!\n",
-					printWithDetail, update.Message.Chat.ID,
+				err = client.NotifyIssues(
+					bot, issues,[]int64{update.Message.Chat.ID},
+					"Centinela avisa!\nBugs activos!\n",
+					printWithDetail,
 				)
 			} else {
 				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Bugs activos!")
@@ -94,9 +95,10 @@ func HandleMessage(r *http.Request) error {
 			}
 
 			if len(issues) > 0 {
-				err = client.NotifyIssuesToChat(
-					bot, issues,"Centinela avisa!\nPedidos de Fix activos!\n",
-					printWithDetail, update.Message.Chat.ID,
+				err = client.NotifyIssues(
+					bot, issues,[]int64{update.Message.Chat.ID},
+					"Centinela avisa!\nPedidos de Fix activos!\n",
+					printWithDetail,
 				)
 			} else {
 				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Pedidos de Fix activos!")
@@ -126,11 +128,6 @@ func HandleMessage(r *http.Request) error {
 
 		case "release":
 			issueID := strings.TrimSpace(update.Message.CommandArguments())
-
-			err = repository.IndexActiveBugs(ctx, jiraClient, dataStoreClient, bot, config)
-			if err != nil {
-				return err
-			}
 
 			err := repository.Release(ctx, jiraClient, dataStoreClient, issueID)
 			if err != nil {
