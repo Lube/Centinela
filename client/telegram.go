@@ -13,7 +13,7 @@ func NotifyIssues(bot *tgbotapi.BotAPI, issues []*domain.Issue, chatRooms []int6
 
 	for _, issue := range issues {
 		if printWithDetail {
-			message = fmt.Sprintf("%s\n[%s](%s) [En filtro](%s)", message, issue.ID, issue.URL, issue.ListURL)
+			message = fmt.Sprintf("%s\n[%s] - (%s) [En filtro](%s)", message, issue.ID, issue.URL, issue.ListURL)
 			message = fmt.Sprintf("%s\nVencimiento: %s", message, issue.DueDate.In(loc).Format(time.RFC822))
 
 			if issue.Description != "" {
