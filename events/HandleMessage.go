@@ -25,7 +25,7 @@ func HandleMessage(r *http.Request) error {
 
 	bot, err := tgbotapi.NewBotAPI(config.TelegramAPIToken)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	var update tgbotapi.Update
@@ -37,6 +37,7 @@ func HandleMessage(r *http.Request) error {
 		return err
 	}
 
+	log.Printf("%v+ \n", update)
 	if update.Message.IsCommand() {
 		tp := jira.BasicAuthTransport{
 			Username: "sebastian.luberriaga@mercadolibre.com",
