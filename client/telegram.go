@@ -42,7 +42,9 @@ func NotifyIssuesToChat(bot *tgbotapi.BotAPI, issues []*domain.Issue, message st
 	for _, issue := range issues {
 		if printWithDetail {
 			message = fmt.Sprintf("%s\nIssue: %s\nVencimiento: %s", message, issue.ID, issue.DueDate.In(loc).Format(time.RFC822))
-
+			if issue.Description != "" {
+				message = fmt.Sprintf("%s\nDescripcion: %s", message, issue.Description)
+			}
 			if issue.Assignee != "" {
 				message = fmt.Sprintf("%s\nAsignado a: %s", message, issue.Assignee)
 			}
