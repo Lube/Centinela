@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	_ "cloud.google.com/go/datastore"
+
+	"time"
+)
 
 const PedidoDeFix = "Pedido de Fix"
 const Bug = "Bug"
@@ -9,7 +13,7 @@ const Bug = "Bug"
 type Issue struct {
 	ID            string
 	Summary   string
-	Description   string
+	Description   string `datastore:",noindex"`
 	Type   		  string
 	Assignee      string
 	Status        string
@@ -19,3 +23,4 @@ type Issue struct {
 	ListURL		  string
 	DueDate       time.Time
 }
+
