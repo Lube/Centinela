@@ -30,6 +30,8 @@ func GetConfig() Config {
 		HandleMessageTelegramURL: os.Getenv("HANDLE_MESSAGE_PUBLIC_URL"),
 		MaxTimesToNotify:         2,
 		UserDirectory: map[TelegramUserID]JiraUser{
+			254343817: {"5c92589d6f495b2df2799f3e", "Jesus"},
+			206759632: {"5c82daf696f17b7887b39fdd", "Fran"},
 			465904347: {"5a6735f3a79cc4281ee3e6bd", "Juan"},
 			597295726: {"5d10ca8328a0740c8e0b2c79", "Gastón"},
 			551386294: {"5a9eb55f7cbc742a5c1e0863", "Ariel"},
