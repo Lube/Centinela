@@ -155,7 +155,7 @@ func HandleMessage(r *http.Request) error {
 			_ = client.Notify(
 				bot, update.Message.Chat.ID,
 				fmt.Sprintf(`Centinela notifica sobre nuevos bugs y pedidos de Fix
-Adicionalmente revisa los pedidos de fix y bugs próximos a vencer (A %d dias para Bugs y %sd horas para Pedidos de Fix) hasta %d veces por día.
+Adicionalmente revisa los pedidos de fix y bugs próximos a vencer (A %f dias para Bugs y %f horas para Pedidos de Fix) hasta %d veces por día.
 
 Comandos
 
