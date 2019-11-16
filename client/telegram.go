@@ -39,7 +39,7 @@ func NotifyIssues(bot *tgbotapi.BotAPI, issues []*domain.Issue, chatRooms []int6
 				ReplyToMessageID: 0,
 			},
 			Text:                  message,
-			ParseMode: "Markdown",
+			ParseMode:             "Markdown",
 			DisableWebPagePreview: false,
 		}
 
@@ -74,7 +74,6 @@ func NotifyIssue(bot *tgbotapi.BotAPI, issue domain.Issue, chatRooms []int64, me
 		message = fmt.Sprintf("%s\nDescription: %s", message, issue.Description)
 	}
 
-
 	for _, chatRoomID := range chatRooms {
 		msg := tgbotapi.MessageConfig{
 			BaseChat: tgbotapi.BaseChat{
@@ -82,7 +81,7 @@ func NotifyIssue(bot *tgbotapi.BotAPI, issue domain.Issue, chatRooms []int64, me
 				ReplyToMessageID: 0,
 			},
 			Text:                  message,
-			ParseMode: "Markdown",
+			ParseMode:             "Markdown",
 			DisableWebPagePreview: false,
 		}
 
@@ -107,7 +106,7 @@ func Notify(bot *tgbotapi.BotAPI, chatID int64, message string, withMarkdown boo
 			ReplyToMessageID: 0,
 		},
 		Text:                  message,
-		ParseMode: parseMode,
+		ParseMode:             parseMode,
 		DisableWebPagePreview: false,
 	}
 

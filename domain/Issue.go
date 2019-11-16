@@ -12,15 +12,14 @@ const Bug = "Bug"
 // Issue is a Centinela's representation of a Jira Issue
 type Issue struct {
 	ID            string
-	Summary   string
+	Summary       string
 	Description   string `datastore:",noindex"`
-	Type   		  string
+	Type          string
 	Assignee      string
 	Status        string
 	TimesNotified int
 	Priority      string
 	URL           string
-	ListURL		  string
+	ListURL       string
 	DueDate       time.Time
 }
-

@@ -151,7 +151,7 @@ func IndexActiveBugs(ctx context.Context, jiraClient *jira.Client, dataStoreClie
 		newBugs = append(newBugs, i)
 	}
 
-	return newBugs,nil
+	return newBugs, nil
 }
 
 func UpdateCurrentIssues(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client, statesToCheck []string) error {
@@ -282,7 +282,7 @@ func ResetIssuesNotifications(ctx context.Context, dataStoreClient *datastore.Cl
 
 func Take(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client, user lib.JiraUser, issueID string) error {
 
-	issue, err := GetIssue(ctx, dataStoreClient, issueID )
+	issue, err := GetIssue(ctx, dataStoreClient, issueID)
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func Take(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datasto
 
 func Release(ctx context.Context, jiraClient *jira.Client, dataStoreClient *datastore.Client, issueID string) error {
 
-	issue, err := GetIssue(ctx, dataStoreClient, issueID )
+	issue, err := GetIssue(ctx, dataStoreClient, issueID)
 	if err != nil {
 		return err
 	}

@@ -70,7 +70,7 @@ func HandleMessage(r *http.Request) error {
 
 			if len(issues) > 0 {
 				err = client.NotifyIssues(
-					bot, issues,[]int64{update.Message.Chat.ID},
+					bot, issues, []int64{update.Message.Chat.ID},
 					"Centinela avisa!\nBugs activos!\n",
 					printWithDetail,
 				)
@@ -96,7 +96,7 @@ func HandleMessage(r *http.Request) error {
 
 			if len(issues) > 0 {
 				err = client.NotifyIssues(
-					bot, issues,[]int64{update.Message.Chat.ID},
+					bot, issues, []int64{update.Message.Chat.ID},
 					"Centinela avisa!\nPedidos de Fix activos!\n",
 					printWithDetail,
 				)
@@ -170,7 +170,7 @@ take - /take <IssueID> Asigna el issue al usuario que envía el comando. <IssueI
 release - /release <IssueID> Libera la asignación del issue.<IssueID> Ej: /release AC-2015.
 
 show - /show <IssueID> Asigna el issue al usuario que envía el comando. <IssueID> Ej: /take AC-2015.`,
-				config.BugDeadline, config.PedidoDeFixDeadline, config.MaxTimesToNotify), false,
+					config.BugDeadline, config.PedidoDeFixDeadline, config.MaxTimesToNotify), false,
 			)
 
 		default:

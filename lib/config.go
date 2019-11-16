@@ -7,7 +7,7 @@ import (
 
 type TelegramUserID int
 type JiraUser struct {
-	Username string
+	Username    string
 	DisplayName string
 }
 
@@ -17,9 +17,9 @@ type Config struct {
 	JiraAPIToken             string
 	HandleMessageTelegramURL string
 	MaxTimesToNotify         int
-	UserDirectory map[TelegramUserID]JiraUser
-	BugDeadline time.Duration
-	PedidoDeFixDeadline time.Duration
+	UserDirectory            map[TelegramUserID]JiraUser
+	BugDeadline              time.Duration
+	PedidoDeFixDeadline      time.Duration
 }
 
 func GetConfig() Config {
@@ -36,7 +36,7 @@ func GetConfig() Config {
 			151575607: {"5c6c717736d4d54c4112f27f", "Claudio"},
 			740387286: {"5bd85c501582cc3b70157386", "Seba"},
 		},
-		BugDeadline: time.Hour * 24 * 7,
-		PedidoDeFixDeadline:  time.Hour * 48,
+		BugDeadline:         time.Hour * 24 * 7,
+		PedidoDeFixDeadline: time.Hour * 48,
 	}
 }
