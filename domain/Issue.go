@@ -8,6 +8,7 @@ const Bug = "Bug"
 // Issue is a Centinela's representation of a Jira Issue
 type Issue struct {
 	ID            string
+	Summary   string
 	Description   string
 	Type   		  string
 	Assignee      string

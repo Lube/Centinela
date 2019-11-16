@@ -16,6 +16,19 @@ const activeBugJQLQuery = `project = AC AND issuetype in ("Bug de GIN", "Inciden
 const issueByKeyJQLQuery = `project = AC AND key = %s`
 const activePedidoDeFixJQLQuery = `project = AC AND issuetype = "Pedido de fix GIN" AND status in (Activo) AND labels in (EMPTY) ORDER BY cf[11400] ASC, created ASC`
 
+func GetJiraIssue(jiraClient *jira.Client, ID string) (jira.Issue, error) {
+	issues, _, err := jiraClient.Issue.Search(fmt.Sprintf(issueByKeyJQLQuery, ID), &jira.SearchOptions{
+		StartAt:    0,
+		MaxResults: 1,
+	})
+
+	if err != nil {
+		return jira.Issue{}, err
+	}
+
+	return issues[0], nil
+}
+
 func GetIssue(ctx context.Context, dataStoreClient *datastore.Client, ID string) (domain.Issue, error) {
 
 	var issue domain.Issue
@@ -124,6 +137,8 @@ func IndexActiveBugs(ctx context.Context, jiraClient *jira.Client, dataStoreClie
 		i.DueDate = t
 		i.Status = issue.Fields.Status.Name
 		i.Priority = issue.Fields.Priority.Name
+		i.Summary = issue.Fields.Summary
+		i.Description = issue.Fields.Description
 		i.URL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s", i.ID)
 		i.ListURL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s?filter=18341", i.ID)
 		i.Description = issue.Fields.Summary
@@ -164,8 +179,8 @@ func UpdateCurrentIssues(ctx context.Context, jiraClient *jira.Client, dataStore
 		if lib.ContainsString(issues[0].Fields.Status.Name, statesToCheck) {
 			issueToUpdate.Status = issues[0].Fields.Status.Name
 			issueToUpdate.Priority = issues[0].Fields.Priority.Name
-			issueToUpdate.URL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s", issueToUpdate.ID)
-			issueToUpdate.ListURL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s?filter=18341", issueToUpdate.ID)
+			issueToUpdate.Summary = issues[0].Fields.Summary
+			issueToUpdate.Description = issues[0].Fields.Description
 
 			if issues[0].Fields.Assignee != nil {
 				issueToUpdate.Assignee = issues[0].Fields.Assignee.DisplayName
@@ -234,9 +249,10 @@ func IndexActivePedidosDeFix(ctx context.Context, jiraClient *jira.Client, dataS
 		i.DueDate = t
 		i.Status = issue.Fields.Status.Name
 		i.Priority = issue.Fields.Priority.Name
+		i.Summary = issue.Fields.Summary
+		i.Description = issue.Fields.Description
 		i.URL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s", i.ID)
 		i.ListURL = fmt.Sprintf("https://mercadolibre.atlassian.net/browse/%s?filter=18342", i.ID)
-		i.Description = issue.Fields.Summary
 		i.Type = domain.PedidoDeFix
 
 		if _, err := dataStoreClient.Put(ctx, k, i); err != nil {

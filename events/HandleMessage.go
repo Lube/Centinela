@@ -75,7 +75,7 @@ func HandleMessage(r *http.Request) error {
 					printWithDetail,
 				)
 			} else {
-				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Bugs activos!")
+				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Bugs activos!", false)
 			}
 			if err != nil {
 				return err
@@ -101,7 +101,7 @@ func HandleMessage(r *http.Request) error {
 					printWithDetail,
 				)
 			} else {
-				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Pedidos de Fix activos!")
+				err = client.Notify(bot, update.Message.Chat.ID, "Centinela avisa!\nNo hay Pedidos de Fix activos!", false)
 			}
 			if err != nil {
 				return err
@@ -109,7 +109,7 @@ func HandleMessage(r *http.Request) error {
 		case "take":
 			user, ok := config.UserDirectory[lib.TelegramUserID(update.Message.From.ID)]
 			if !ok {
-				_ = client.Notify(bot, update.Message.Chat.ID, "Could not find user on directory - contact Lube!")
+				_ = client.Notify(bot, update.Message.Chat.ID, "Could not find user on directory - contact Lube!", false)
 			}
 
 			issueID := strings.TrimSpace(update.Message.CommandArguments())
@@ -124,7 +124,7 @@ func HandleMessage(r *http.Request) error {
 				return err
 			}
 
-			_ = client.Notify(bot, update.Message.Chat.ID, fmt.Sprintf("Issue: %s assigned to: %s", issueID, user.DisplayName))
+			_ = client.Notify(bot, update.Message.Chat.ID, fmt.Sprintf("Issue: %s assigned to: %s", issueID, user.DisplayName), false)
 
 		case "release":
 			issueID := strings.TrimSpace(update.Message.CommandArguments())
@@ -139,12 +139,23 @@ func HandleMessage(r *http.Request) error {
 				return err
 			}
 
-			_ = client.Notify(bot, update.Message.Chat.ID, fmt.Sprintf("Issue: %s is now free", issueID))
+			_ = client.Notify(bot, update.Message.Chat.ID, fmt.Sprintf("Issue: %s is now free", issueID), false)
+
+		case "show":
+			issueID := strings.TrimSpace(update.Message.CommandArguments())
+
+			issue, err := repository.GetIssue(ctx, dataStoreClient, issueID)
+			if err != nil {
+				return err
+			}
+
+			_ = client.NotifyIssue(bot, issue, []int64{update.Message.Chat.ID}, "")
 
 		case "help":
-			_ = client.Notify(bot, update.Message.Chat.ID,
+			_ = client.Notify(
+				bot, update.Message.Chat.ID,
 				fmt.Sprintf(`Centinela notifica sobre nuevos bugs y pedidos de Fix
-Adicionalmente revisa los pedidos de fix y bugs próximos a vencer (A %s dias para Bugs y %s horas para Pedidos de Fix) hasta % veces por día.
+Adicionalmente revisa los pedidos de fix y bugs próximos a vencer (A %d dias para Bugs y %sd horas para Pedidos de Fix) hasta %d veces por día.
 
 Comandos
 
@@ -156,7 +167,11 @@ pedidos_de_fix - /pedidos_de_fix [--verbose] Lista los pedidos de fix activos ac
 
 take - /take <IssueID> Asigna el issue al usuario que envía el comando. <IssueID> Ej: /take AC-2015.
 
-release - /release <IssueID> Libera la asignación del issue.<IssueID> Ej: /release AC-2015.`, config.MaxTimesToNotify))
+release - /release <IssueID> Libera la asignación del issue.<IssueID> Ej: /release AC-2015.
+
+show - /show <IssueID> Asigna el issue al usuario que envía el comando. <IssueID> Ej: /take AC-2015.`,
+				config.BugDeadline, config.PedidoDeFixDeadline, config.MaxTimesToNotify), false,
+			)
 
 		default:
 		}
