@@ -36,7 +36,7 @@ func GetConfig() Config {
 			151575607: {"5c6c717736d4d54c4112f27f", "Claudio"},
 			740387286: {"5bd85c501582cc3b70157386", "Seba"},
 		},
-		BugDeadline:         time.Hour * 24 * 7,
+		BugDeadline:         time.Hour * 24 * 5,
 		PedidoDeFixDeadline: time.Hour * 48,
 	}
 }
