@@ -169,7 +169,7 @@ take - /take <IssueID> Asigna el issue al usuario que envía el comando. <IssueI
 
 release - /release <IssueID> Libera la asignación del issue.<IssueID> Ej: /release AC-2015.
 
-show - /show <IssueID> Asigna el issue al usuario que envía el comando. <IssueID> Ej: /take AC-2015.`,
+show - /show <IssueID> Muestra el detalle y la descripción del issue. <IssueID> Ej: /show AC-2015.`,
 					config.BugDeadline.Hours() / 24, config.PedidoDeFixDeadline.Hours(), config.MaxTimesToNotify), false,
 			)
 
